@@ -1,1 +1,4 @@
 # segpq
+
+Codebase of SegPQ
+
