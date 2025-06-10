@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #dataset="rb04-4096"
-#dataset="cw12b-1M"
-dataset="ccnews-1M"
+dataset="cw12b-1M"
+#dataset="ccnews-1M"
 #dataset="cw12b-4096"
 #result_dir="/mnt/hgfs/Ddatabase/Result"
 #data_dir="/mnt/hgfs/Ddatabase/Data"
@@ -26,18 +26,28 @@ mkdir -p "$result_dir/index/$dataset/$index_type"
 mkdir -p "$result_dir/log/$dataset/$index_type"
 #
 ## build index
-rm -r $code_dir
+#rm -r $code_dir
 cmake -B $code_dir -S $source_dir
 sleep 1
 cd $code_dir
-make
-#16 32 64 128 256 512 1024 2048 4096 8192 16384 32768 65536 131072 262144
+make -j
+#16 32 62 63 64 126 127 128 254 255 256 512 1024 2048 4096 8192 16384 32768 65536 131072 262144
 #64 128 256 512 1024 2048 4096 8192 16384 32768 65536 131072
-for epsilon in 32768
+#16 32 62 63 64 126 127 128 254 255 256 512 1024 2048 4096 8192 16384 32768 65536 131072 262144
+#"simd" "normal" "simd_simple"
+for dataset in $data_dir/*;
 do
-  for decode_type in "simd"
+  for epsilon in 1
   do
-    $code_dir/pgm_decode $index_type $data_dir/$dataset/$dataset $result_dir/index/$dataset/$index_type/$dataset-$index_type-$epsilon.idx $epsilon $read_only $decode_type $result_dir/log/$dataset/$index_type/$dataset-$index_type-$epsilon
+    echo "————————————dataset : $dataset epsilon: $epsilon————————————"
+    for decode_type in "simd"
+    do
+      for repeat in 1 2
+      do
+        mkdir -p $result_dir/index/$dataset/$index_type/$dataset-$index_type-$epsilon/
+        $code_dir/pgm_decode $index_type $data_dir/$dataset/$dataset $result_dir/index/$dataset/$index_type/$dataset-$index_type-$epsilon/ $epsilon $read_only $decode_type $result_dir/log/$dataset/$index_type/$dataset-$index_type-$epsilon
+      done
+    done
   done
 done
 # build and check index

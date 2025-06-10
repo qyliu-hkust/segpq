@@ -1,10 +1,8 @@
 #include <vector>
-#include <cmath>
 #include <bits/stdc++.h>
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <numeric>
 using namespace std;
 ofstream logStream;
 
@@ -124,39 +122,32 @@ void create_log_path(const string home_path, string dataset_name, string create_
     }
 }
 
-template <typename K>
-double calculate_rsquared(const vector<K> y, const vector<K> x , double slope, double intercept)
-{
-    double y_mean = accumulate(y.begin(), y.end(), 0.0) / y.size();
-    double ss_total = 0.0;
-    double ss_residual = 0.0;
-
-    for(size_t i = 0; i < y.size(); i++)
-    {
-        ss_total += pow(y[i] - y_mean, 2);
-        ss_residual += pow(*y[i] - (x[i] * slope + intercept), 2);
+std::vector<std::string> split_str(const std::string &str, char delimiter) {
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(str);
+    while (std::getline(tokenStream, token, delimiter)) {
+        // 去除前后空格
+        token.erase(0, token.find_first_not_of(" \t"));
+        token.erase(token.find_last_not_of(" \t") + 1);
+        tokens.push_back(token);
     }
-    return 1 - (ss_total / ss_residual);
+    return tokens;
 }
 
-void linear_regression(const vector<double>& x, const vector<double>& y, double& slope, double& intercept) {
-    int n = x.size();
-    if (n <= 1) {
-        return;
+// 转换为 double 的函数
+std::vector<double> parseDoubles(const std::string &line, char delimiter) {
+    std::vector<double> values;
+    std::vector<std::string> tokens = split_str(line, delimiter);
+
+    for (const auto &token : tokens) {
+        try {
+            // 尝试将每个 token 转换为 double
+            values.push_back(std::stod(token));
+        } catch (const std::exception &e) {
+            // 如果无法转换，跳过或处理异常
+            std::cerr << "Error parsing token: " << token << " (" << e.what() << ")\n";
+        }
     }
-
-    double sum_x = 0.0, sum_y = 0.0, sum_xy = 0.0, sum_xx = 0.0;
-    for (int i = 0; i < n; ++i) {
-        sum_x += x[i];
-        sum_y += y[i];
-        sum_xy += x[i] * y[i];
-        sum_xx += x[i] * x[i];
-    }
-
-    double mean_x = sum_x / n;
-    double mean_y = sum_y / n;
-
-    slope = (sum_xy - n * mean_x * mean_y) / (sum_xx - n * mean_x * mean_x);
-    intercept = mean_y - slope * mean_x;
+    return values;
 }
-

@@ -27,9 +27,9 @@
 #include <vector>
 
 #ifdef _OPENMP
-#include <omp.h>
+// #include <omp.h>
 #else
-#pragma message ("Compilation with -fopenmp is optional but recommended")
+// #pragma message ("Compilation with -fopenmp is optional but recommended")
 #define omp_get_num_procs() 1
 #define omp_get_max_threads() 1
 #endif
@@ -37,7 +37,7 @@
 namespace pgm::internal { 
 template<typename T>
 using LargeSigned = typename std::conditional_t<std::is_floating_point_v<T>, long double,
-                                                std::conditional_t<(sizeof(T) < 8), int64_t, __int128>>;
+                                                std::conditional_t<(sizeof(T) < 8), int64_t, int64_t>>;
 
 template<typename X, typename Y>
 class OptimalPiecewiseLinearModel {
@@ -100,6 +100,7 @@ public:
         auto min_y = std::numeric_limits<Y>::lowest();  
         Point p1{x, y >= max_y - epsilon ? max_y : y + epsilon};   
         Point p2{x, y <= min_y + epsilon ? min_y : y - epsilon};
+        // std::cout << epsilon << endl;
         // std::cout << y << std::endl;
         // std::cout << p1.y << " " << p2.y << std::endl;
         // std::cout << std::endl;
@@ -227,12 +228,10 @@ public:
 
     X get_first_x() const { return first; }
 
-    std::tuple<SY, uint8_t, float, SY> get_fixed_point_segment(X origin, X max_input) const { // fixed point segment
+    std::tuple<SY, uint8_t, SY> get_fixed_point_segment(X origin, X max_input) const { // fixed point segment
         if (one_point()) {
-            // std::cout << "One Point: " << static_cast<int64_t>(rectangle[0].y) << " " << static_cast<int64_t>(rectangle[1].y) << std::endl;
-            return {0, 0, 0, (rectangle[0].y + rectangle[1].y) / 2};
+            return {0, 0, (rectangle[0].y + rectangle[1].y) / 2};
         }
-
 
         auto &p1 = rectangle[1];
 
@@ -248,7 +247,7 @@ public:
         auto intercept = (intercept_n + rounding_term) / intercept_d + p1.y;
 
         // uint64_t, uint16_t, SY=__int128
-        return {slope_significand, slope_exponent, static_cast<float>(max_slope), intercept};
+        return {slope_significand, slope_exponent, intercept};
     }
 };
 
